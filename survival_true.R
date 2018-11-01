@@ -112,6 +112,45 @@ for(i in 1:20531)
   p[i]<-p.value
 }
 
+classify_geneid= "1499"
+param= "Up"
+
+for(i in 1:20531)
+{
+  special_express <- table[i,3:433]
+  E <- as.matrix(special_express)
+  E <- as.numeric(E)
+  median_express <- median(E)
+  Svival$special_express <- as.numeric(special_express)
+  classify_express <- table[table$gene_id==classify_geneid,3:433]
+  C <- as.matrix(classify_express)
+  C <- as.numeric(C)
+  C_median_express <- median(C)
+  #subset
+  Svival$threshold <- as.factor(ifelse(classify_express>=C_median_express,"Up","Down"))
+  Svival <- subset(Svival, threshold == param)   #notice : reset the paramter
+  E <- as.matrix(Svival$special_express)
+  E <- as.numeric(E)
+  median_express <- median(E)
+  ifelse(
+    min(E) >= median_express,
+    p.value <- 1,
+    p.value <- p_value_calculate())
+  p[i]<-p.value
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 for(i in 1:20531)
 {
   p.value<-p_value_calculate2(table$gene_id[i])
