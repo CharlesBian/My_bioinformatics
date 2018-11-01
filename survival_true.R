@@ -45,7 +45,7 @@ onegene_survival <- function(special_geneid)
   }
 
 
-
+#classify_gene up and down
 classify_suvival <- function(special_geneid, classify_geneid, param)
   {
   special_express <- table[table$gene_id==special_geneid,3:433]
@@ -94,31 +94,83 @@ mycox <- survfit(Surv(Svival$start.time,Svival$days,Svival$vital_status)~ E>=med
                  conf.type = "logit") 
 survfitcoxph.fit()
 
+#apply function
+p <- matrix()
+p <- sapply(table$gene_id,p_value_calculate2)
 
+for(i in 1:20531)
+{
+  special_express <- table[i,3:433]
+  E <- as.matrix(special_express)
+  E <- as.numeric(E)
+  median_express <- median(E)
+  Svival$special_express <- as.numeric(special_express)
+  ifelse(
+    min(E) >= median_express,
+    p.value <- 1,
+    p.value <- p_value_calculate())
+  p[i]<-p.value
+}
 
+for(i in 1:20531)
+{
+  p.value<-p_value_calculate2(table$gene_id[i])
+  p[i]<-p.value
+}
 
+table$p.value_survival<-p
 
+#p_value calculate and p_value calculate2 code
+p_value_calculate2(1677)
 
+p_value_calculate <- function()
+  {
+  p_val <- survdiff(Surv(Svival$days,Svival$vital_status)~ Svival$special_express>=median_express,data = Svival)
+  p.value <- 1-pchisq(p_val$chisq,length(p_val$n)-1)
+  p.value
+  }
+special_geneid<-1
+p_value_calculate2 <- function(special_geneid)
+{
+  special_express <- table[table$gene_id==special_geneid,3:433]
+  E <- as.matrix(special_express)
+  E <- as.numeric(E)
+  median_express <- median(E)
+  Svival$special_express <- as.numeric(special_express)
+  ifelse(
+    min(E) >= median_express,
+    p.value <- 1,
+    p.value <- p_value_calculate())
+  p.value
+}
 
+p_value_calculate3()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+p_value_calculate3 <- function(special_geneid, classify_geneid, param)
+  {
+  special_express <- table[table$gene_id==special_geneid,3:433]
+  E <- as.matrix(special_express)
+  E <- as.numeric(E)
+  median_express <- median(E)
+  Svival$special_express <- as.numeric(special_express)   #add to Svival
+  classify_express <- table[table$gene_id==classify_geneid,3:433]
+  C <- as.matrix(classify_express)
+  C <- as.numeric(C)
+  C_median_express <- median(C)
+  #subset
+  Svival$threshold <- as.factor(ifelse(classify_express>=C_median_express,"Up","Down"))
+  Svival <- subset(Svival, threshold == param)   #notice : reset the paramter
+  E <- as.matrix(Svival$special_express)
+  E <- as.numeric(E)
+  median_express <- median(E)
+  
+  Svival$special_express <- as.numeric(special_express)
+  ifelse(
+    min(E) >= median_express,
+    p.value <- 1,
+    p.value <- p_value_calculate())
+  p.value
+  }
 
 
 
