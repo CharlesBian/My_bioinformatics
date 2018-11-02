@@ -20,6 +20,10 @@ LH_data <- read.xlsx("C:/Users/77214/Desktop/seq_information/LH/hep26429-sup-001
 
 ang_data <- read.xlsx("C:/Users/77214/Desktop/seq_information/micro/ang.xlsx",1)
 
+#list of survival
+gene_list <- read.xlsx(choose.files())
+gene_list2 <-subset(gene_list, gene_list$`CTNNB1-up_p.value_survival`<0.05)
+
 #volcano
 liu_rnaseq2$threshold21 <- as.factor(liu_rnaseq2$`(CBSsh2/CTRL)p-value`<0.05
                                      &abs(liu_rnaseq2$`log2(CBSsh21/CTRL1)`)>=1.5)
@@ -186,6 +190,11 @@ ekk2 <- enrichKEGG(gene =ang_data$Symbol,
                   pvalueCutoff = 0.05,
                   pAdjustMethod = "BH",
                   use_internal_data = FALSE)
+ekk <- enrichKEGG(gene = gene_list2$gene_id,
+                   organism = "hsa",
+                   pvalueCutoff = 0.05,
+                   pAdjustMethod = "BH",
+                   use_internal_data = TRUE)
 
 summary(as.data.frame(ekk))
 
@@ -198,7 +207,7 @@ barplot(ekk, drop = TRUE, showCategory = 40,color = "qvalue")
 dotplot(ekk,
         showCategory = 40,
         color = "qvalue",
-        title = "LH kegg pathway")
+        title = "kegg pathway")
 
 cnetplot(ekk)
 emapplot(ekk)

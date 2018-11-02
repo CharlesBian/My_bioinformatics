@@ -65,13 +65,13 @@ classify_suvival <- function(special_geneid, classify_geneid, param)
   E <- as.numeric(E)
   median_express <- median(E)
 
-#create a survival formula
-  mysurvival <- survfit(Surv(Svival$start.time,Svival$days,Svival$vital_status)~ Svival$special_express>=median_express,
-                      conf.type = "logit")
-
 #caculate the p_value
   p_val <- survdiff(Surv(Svival$days,Svival$vital_status)~ Svival$special_express>=median_express,data = Svival)
   p.value <- 1-pchisq(p_val$chisq,length(p_val$n)-1)
+
+  #create a survival formula
+  mysurvival <- survfit(Surv(Svival$start.time,Svival$days,Svival$vital_status)~ Svival$special_express>=median_express,
+                      conf.type = "logit")
 
 #plot the kaplan-Meier curve
   plot(mysurvival,
@@ -115,6 +115,13 @@ for(i in 1:20531)
 classify_geneid= "1499"
 param= "Up"
 
+p_calculate <- function()
+{
+  p_val <- survdiff(Surv(a$days,a$vital_status)~ a$special_express>=median_express,data = a)
+  p.value <- 1-pchisq(p_val$chisq,length(p_val$n)-1)
+  p.value
+}
+
 for(i in 1:20531)
 {
   special_express <- table[i,3:433]
@@ -128,27 +135,18 @@ for(i in 1:20531)
   C_median_express <- median(C)
   #subset
   Svival$threshold <- as.factor(ifelse(classify_express>=C_median_express,"Up","Down"))
-  Svival <- subset(Svival, threshold == param)   #notice : reset the paramter
-  E <- as.matrix(Svival$special_express)
+  a <- subset(Svival, threshold == param)   #notice : reset the paramter
+  
+  E <- as.matrix(a$special_express)
   E <- as.numeric(E)
   median_express <- median(E)
   ifelse(
     min(E) >= median_express,
-    p.value <- 1,
-    p.value <- p_value_calculate())
+    p.value <- 1,          
+    p.value <- p_calculate())
   p[i]<-p.value
 }
-
-
-
-
-
-
-
-
-
-
-
+write.xlsx(p,choose.files(),append = TRUE)
 
 
 for(i in 1:20531)
@@ -167,8 +165,10 @@ p_value_calculate <- function()
   p_val <- survdiff(Surv(Svival$days,Svival$vital_status)~ Svival$special_express>=median_express,data = Svival)
   p.value <- 1-pchisq(p_val$chisq,length(p_val$n)-1)
   p.value
-  }
+}
+
 special_geneid<-1
+
 p_value_calculate2 <- function(special_geneid)
 {
   special_express <- table[table$gene_id==special_geneid,3:433]
@@ -210,8 +210,6 @@ p_value_calculate3 <- function(special_geneid, classify_geneid, param)
     p.value <- p_value_calculate())
   p.value
   }
-
-
 
 
 
