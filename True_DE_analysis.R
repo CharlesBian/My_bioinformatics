@@ -28,5 +28,32 @@ boxplot(exprSet)
 resultsNames(dds2)
 res <- results(dds2)
 res_ordered <- as.data.frame(res[order(res$padj),])
+res$log2FoldChange
+res$padj
+
+
+ggplot(res_ordered,
+       aes(x=res_ordered$log2FoldChange,
+           y=-log10(res_ordered$padj)))+
+  scale_color_manual(values=c("blue","grey","red"))+
+  geom_point()+
+  xlim(c(-4,4))+
+  ylab("-log10 p-value")+
+  xlab("log2 fold change")+
+  labs(title="Volcano of CBSsh22 vs CBSsh32")+
+  geom_vline(xintercept = c(-1.5,1.5),lty=4,col="black",lwd=0.6)+
+  geom_hline(yintercept = -log10(0.05),lty=4,col="black",lwd=0.6)+
+  theme(legend.position = "right",
+        panel.grid = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(face = "bold",color = "black",size = 12),
+        plot.title = element_text(hjust = 0.5))
+
+
+
+
+
+
+
 
 
