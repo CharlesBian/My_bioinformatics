@@ -98,6 +98,7 @@ survfitcoxph.fit()
 p <- matrix()
 p <- sapply(table$gene_id,p_value_calculate2)
 
+
 for(i in 1:20531)
 {
   special_express <- table[i,3:433]
@@ -112,7 +113,7 @@ for(i in 1:20531)
   p[i]<-p.value
 }
 
-classify_geneid= "1499"
+classify_geneid= "55693"
 param= "Up"
 
 p_calculate <- function()
@@ -146,7 +147,7 @@ for(i in 1:20531)
     p.value <- p_calculate())
   p[i]<-p.value
 }
-write.xlsx(p,choose.files(),append = TRUE)
+write.xlsx(p,choose.files(),append = FALSE)
 
 
 for(i in 1:20531)
@@ -210,6 +211,47 @@ p_value_calculate3 <- function(special_geneid, classify_geneid, param)
     p.value <- p_value_calculate())
   p.value
   }
+
+#survival first classify
+
+
+
+for(i in 1:20531)
+{
+  special_express <- table[i,3:433]
+  E <- as.matrix(special_express)
+  E <- as.numeric(E)
+  median_express <- median(E)
+  Svival$special_express <- as.numeric(special_express)
+  
+  classify_express <- table[table$gene_id==classify_geneid,3:433]
+  C <- as.matrix(classify_express)
+  C <- as.numeric(C)
+  C_median_express <- median(C)
+  #subset
+  Svival$threshold <- as.factor(ifelse(classify_express>=C_median_express,"Up","Down"))
+  a <- subset(Svival, threshold == param)   #notice : reset the paramter
+  
+  E <- as.matrix(a$special_express)
+  E <- as.numeric(E)
+  median_express <- median(E)
+  ifelse(
+    min(E) >= median_express,
+    p.value <- 1,          
+    p.value <- p_calculate())
+  p[i]<-p.value
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

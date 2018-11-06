@@ -1,16 +1,20 @@
 library("openxlsx")
 library("limma")
 library("DESeq2")
+library("edgeR")
 library("ggplot2")
 library("Cairo")
 library("dplyr")
 
 rna_seq_data <- read.xlsx(file.choose())
 Genename <- read.xlsx(file.choose())
+rna_seq_data <- merge(rna_seq_data,Genename,by.x="gene_id",by.y="ENTREZ_GENE_ID",all.x = TRUE)
+sum(is.na(rna_seq_data$GENE.NAME))
+
 #DE
 #rna_seq_data<-subset(rna_seq_data,select = c(1,3:8) )
-
-countdata <- as.matrix(floor(rna_seq_data[1:nrow(rna_seq_data),3:ncol(rna_seq_data)]))
+colnamber<-ncol(rna_seq_data)-1
+countdata<- as.matrix(floor(rna_seq_data[1:nrow(rna_seq_data),3:colnamber]))
 condition <- as.factor(c(rep("sh1",2),rep("sh2",2),rep("Ctrl",2)))
 col_data <-data.frame(row.names = colnames(countdata),
                       group_list=condition)
@@ -18,6 +22,7 @@ col_data <-data.frame(row.names = colnames(countdata),
 dds <- DESeqDataSetFromMatrix(countData = countdata,
                               colData = col_data,
                               design = ~group_list)
+
 rownames(dds)<-rna_seq_data$gene_id
 dds2 <- DESeq(dds)
 rld <- rlogTransformation(dds2)
@@ -34,17 +39,18 @@ res$padj
 
 res_ordered$threshold <- as.factor(ifelse(res_ordered$pvalue<0.05&abs(res_ordered$log2FoldChange)>=1,
                                             ifelse(res_ordered$log2FoldChange>1,"Up","Down"),"Not"))
-subname <- head(subset(res_ordered,threshold=="Up"),12)
 
-newname <- merge(rna_seq_data,Genename,by.x="gene_id",by.y="ENTREZ_GENE_ID")
+subname <- head(subset(res_ordered,threshold=="Down"),13)  #subset the important gene
+subname <- merge(subname,Genename,by.x=colnames(subname),by.y="ENTREZ_GENE_ID",all.x = TRUE)
+sum(is.na(rna_seq_data$GENE.NAME))
 
 
 ggplot(res_ordered,
        aes(x=res_ordered$log2FoldChange,
            y=-log10(res_ordered$pvalue),
            colour = threshold))+
-  scale_color_manual(values=c("blue","grey","red"))+
-  geom_point(size = 3)+
+  scale_color_manual(values=c("skyblue","grey","red"))+
+  geom_point(size = 3.5)+
   xlim(c(-4,4))+
   ylab("-log10 p-value")+
   xlab("log2 fold change")+
@@ -56,7 +62,11 @@ ggplot(res_ordered,
         legend.title = element_blank(),
         legend.text = element_text(face = "bold",color = "black",size = 12),
         plot.title = element_text(hjust = 0.5))+
-  annotate(geom ="text",x=subname$log2FoldChange,y=-log10(subname$pvalue),label=rownames(subname),size = 2.5)
+  annotate(geom ="text",
+           x=subname$log2FoldChange,
+           y=-log10(subname$pvalue),
+           label=rownames(subname),
+           size = 2.3)
 
 
 

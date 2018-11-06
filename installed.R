@@ -41,7 +41,7 @@ BiocManager::install("cgdsR")
 #DE analysis
 BiocManager::install("DESeq2")
 BiocManager::install("edgeR")
-
+BiocManager::install("rsem")
 
 #ms
 install.packages("XML")
