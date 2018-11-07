@@ -57,7 +57,7 @@ BiocManager::install("MSnbase")
 BiocManager::install("multtest")
 BiocManager::install("CAMERA")
 BiocManager::install("RNetCDF")
-
+BiocManager::install("statTarget")
 
 
 #3--cairo plot
