@@ -1,0 +1,157 @@
+---
+title: "Introduction_to_plot"
+author: "xuzhougeng"
+date: "2018/11/8"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 准备工作环境
+
+更改工作目录和加载R包
+
+```{r}
+setwd("/Users/zgxu/Desktop/R语言基础/")
+## 加载R包
+library(ggplot2)
+theme_set(theme_bw())  
+```
+
+## 对向条形图
+###  准备数据
+
+以内置数据集mtcars为例，可视化展示化车的耗油量(mpg)
+
+```{r}
+data("mtcars")  # load data
+mtcars$`car name` <- rownames(mtcars)  # 创建车名列
+mtcars$mpg_z <- round((mtcars$mpg - mean(mtcars$mpg))/sd(mtcars$mpg), 2)  # 标准化
+mtcars$mpg_type <- ifelse(mtcars$mpg_z < 0, "below", "above")  # 标注方向
+mtcars <- mtcars[order(mtcars$mpg_z), ]  # 按照标准化排序
+mtcars$`car name` <- factor(mtcars$`car name`, levels = mtcars$`car name`)  # 转换因子保留绘图时排序方向.
+```
+
+### ggplot2作图
+
+核心的两个函数: `geom_bar()`和`coord_flip()`
+
+```{r}
+ggplot(mtcars, aes(x=`car name`, y=mpg_z, label=mpg_z)) + 
+  geom_bar(stat='identity', aes(fill=mpg_type), width=.5)  + # 普通条形图
+  scale_fill_manual(name="Mileage", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#00ba38", "below"="#f8766d")) +  # 颜色
+  labs(subtitle="Normalised mileage from 'mtcars'", 
+       title= "Diverging Bars") +  #标签
+  coord_flip() # 转向
+
+```
+
+###  拓展思维：差异表达分析后，上调和下调基因画图
+
+数据准备: 筛选出基因表达p最小的前20个基因
+
+```{r}
+load("allDiff.Rda")
+head(allDiff)
+top_30 <- allDiff[1:30, ] #数据已经按照p值排序，即选择前20行
+top_30$geneName <- rownames(top_30)
+top_30$FC_type <- ifelse(top_30$logFC < 0, "below", "above")  # 标注方向
+top_30 <-top_30[order(top_30$logFC), ]  # 按照标准化排序
+top_30$geneName <- factor(top_30$geneName , levels = top_30$geneName )
+```
+
+画图部分
+
+```{r}
+ggplot(top_30, aes(x=geneName, y=logFC, label=FC_type)) + 
+  geom_bar(stat='identity', aes(fill=FC_type), width=.5)  + # 普通条形图
+  scale_fill_manual(name="log FoldChange", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#00ba38", "below"="#f8766d")) +  # 颜色
+  labs(subtitle="example of differential gene expression plot", 
+       title= "nice plot") +  #标签
+  coord_flip() # 转向
+
+```
+
+## 棒棒糖图
+
+同样的数据，我们还可以用换个展示方式，将`geom_bar()`替换成`geom_point()`和`geom_segment()`即可
+
+```{r}
+ggplot(mtcars, aes(x=`car name`, y=mpg_z, label=mpg_z)) + 
+  geom_point(stat='identity', fill="black", size=6)  +
+  geom_segment(aes(y = 0, 
+                   x = `car name`, 
+                   yend = mpg_z, 
+                   xend = `car name`), 
+               color = "black") +
+  geom_text(color="white", size=2) +
+  labs(title="Diverging Lollipop Chart", 
+       subtitle="Normalized mileage from 'mtcars': Lollipop") + 
+  ylim(-2.5, 2.5) +
+  coord_flip()
+```
+
+同样适用刚才的差异表达，我们还可以保留颜色
+
+```{r}
+ggplot(top_30, aes(x=geneName, y=logFC, label=FC_type)) + 
+  geom_segment(aes(y = 0, 
+                   x = geneName, 
+                   yend = logFC, 
+                   xend = geneName), 
+               color = "black") +
+  geom_point(stat='identity', aes(colour=FC_type),size=3)  +
+  scale_colour_manual(name="log FoldChange", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#00ba38", "below"="#f8766d")) +  # 颜色
+  labs(subtitle="example of differential gene expression plot", 
+       title= "nice plot") +  #标签
+  coord_flip() # 转向
+
+```
+
+### 金字塔图
+
+准备环境，下载数据
+
+```{r}
+library(ggplot2)
+library(ggthemes)
+options(scipen = 999)  # turns of scientific notations like 1e+40
+
+# Read data
+#email_campaign_funnel <- read.csv("https://raw.githubusercontent.com/selva86/datasets/master/email_campaign_funnel.csv")
+email_campaign_funnel <- read.csv("email_campaign_funnel.csv")
+```
+
+核心函数依旧是`geom_bar()`和`coord_flip()`
+
+```{r}
+# X Axis Breaks and Labels 
+brks <- seq(-15000000, 15000000, 5000000)
+lbls = paste0(as.character(c(seq(15, 0, -5), seq(5, 15, 5))), "m")
+
+# Plot
+ggplot(email_campaign_funnel, aes(x = Stage, y = Users, fill = Gender)) +   # Fill column
+                              geom_bar(stat = "identity", width = .6) +   # draw the bars
+                              scale_y_continuous(breaks = brks,   # Breaks
+                                                 labels = lbls) + # Labels
+                              coord_flip() +  # Flip axes
+                              labs(title="Email Campaign Funnel") +
+                              theme_tufte() +  # Tufte theme from ggfortify
+                              theme(plot.title = element_text(hjust = .5), 
+                                    axis.ticks = element_blank()) +   # Centre plot title
+                              scale_fill_brewer(palette = "Dark2")  # Color palette
+```
+
+
+## 参考资料
+
+- <http://r-statistics.co/>
+- <http://www.sthda.com/english/wiki/data-visualization>

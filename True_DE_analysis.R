@@ -80,7 +80,7 @@ ggplot(res_ordered,
            label=rownames(upname),
            size = 2.3)
 
-
+##venn plot
 
 library(VennDiagram)
 
@@ -194,6 +194,14 @@ pathview(gene.data = c$GENE.ID,
          split.group = TRUE,
          map.null = TRUE,
          sign.pos = "bottomleft")
+
+
+
+
+
+
+
+
 
 
 
