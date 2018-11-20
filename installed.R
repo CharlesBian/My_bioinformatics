@@ -66,7 +66,9 @@ library("Cairo")
 
 #4--survival packages
 install.packages("survival")
+BiocManager::install("survminer")
 library("survival")
+library("survminer")
 
 #5--correlation
 install.packages("corrplot")
@@ -84,13 +86,13 @@ library("gplots")
 install.packages("devtools")
 library("devtools")
 devtools::install_github("ramnathv/rCharts")
-devtools::install_github("neuhausi/canvasXpress") #用于venn图
+devtools::install_github("neuhausi/canvasXpress") 
 library(canvasXpress)
 
 install.packages("samr")
 library("samr")
 
-install.packages("VennDiagram")  #venn图
+install.packages("VennDiagram")  
 library("grid")
 library("futile.logger")
 library(VennDiagram)
@@ -110,7 +112,8 @@ install.packages("ggcorrplot")
 install.packages("ggfortify")
 install.packages("scatterplot3d")
 install.packages("Seurat")
-
+install.packages("cellrange")
+BiocManager::install("cellranger")
 
 #neural networks
 install.packages("nnet")

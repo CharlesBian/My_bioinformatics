@@ -4,10 +4,11 @@ table <- read.xlsx(choose.files())
 Svival <- read.xlsx(choose.files(),2)
 
 library(survival)
+library(survminer)
 #"55693" : KDM4D
 #"1499"  : CTNNB1
 
-onegene_survival(special_geneid="1499")
+onegene_survival(special_geneid="55693")
 
 classify_suvival(special_geneid="55693",
                  classify_geneid= "1499",
@@ -241,6 +242,45 @@ for(i in 1:20531)
     p.value <- p_calculate())
   p[i]<-p.value
 }
+
+special_geneid="55693"
+special_express <- table[table$gene_id==special_geneid,3:433]
+E <- as.matrix(special_express)
+E <- as.numeric(E)
+median_express <- median(E)
+quan <- quantile(special_express)
+Svival$special_express <- as.numeric(special_express)  #add to Svival
+Svival$status <- as.factor(ifelse(Svival$special_express<=quan$`75%`,
+                                   ifelse(Svival$special_express<=quan$`25%`,"down","median"),"up"))
+
+Svival$status <- as.factor(ifelse(Svival$special_express<=quan$`75%`,"Middle&down","up"))
+
+#create a survival formula
+mysurvival <- survfit(Surv(Svival$start.time,Svival$days,Svival$vital_status)~ Svival$status,
+                        conf.type = "logit")
+#caculate the p_value
+p_val <- survdiff(Surv(Svival$days,Svival$vital_status)~ Svival$status,data = Svival)
+p.value <- 1-pchisq(p_val$chisq,length(p_val$n)-1)
+  
+#plot the kaplan-Meier curve
+plot(mysurvival,
+      main=paste("Kaplan-Meier estimate",
+                  "(",table[table$gene_id==special_geneid,1],")",sep = ""),
+      xlab = "Time(Days)", 
+      ylab = "Survival probability",
+      col = c('blue','red'),
+      sub = paste("p.value=",p.value))
+legend("topright", 
+        legend=c(paste(table[table$gene_id==special_geneid,1]," >=75%","(N=",sum(Svival$status=="up"),")",sep=""),
+   #             paste(table[table$gene_id==special_geneid,1]," = middle","(N=",sum(Svival$status=="median"),")",sep=""),
+                paste(table[table$gene_id==special_geneid,1]," <=25%","(N=",sum(Svival$status=="down"),")",sep="")),
+       col=c("red","green","blue"),
+       lwd=2)
+
+
+
+
+
 
 
 
