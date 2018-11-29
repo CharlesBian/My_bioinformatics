@@ -17,8 +17,16 @@ x <- as.integer(x)
 x <- x %in% (10:19)
 y <- colnames(raw_counts)[-1]
 y <- y[x]
-
 normal_counts <- cbind(geneID, subset(raw_counts, select = y))
 
+#cancer sample
+x <- colnames(normal_counts)[-1]
+y <- substr(x,9,12)
+z <- subset(raw_counts,
+            select = grep(paste(y, collapse = "|"), 
+                          colnames(raw_counts),
+                          value = TRUE))
+tumor_counts <- subset(z, select = setdiff(colnames(z),colnames(normal_counts)))
+tumor_counts <- cbind(geneID, tumor_counts)
 
 
