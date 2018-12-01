@@ -1,0 +1,167 @@
+---
+ltitle: "different boxplots"
+author: "yzhang"
+date: "2018年11月28日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+#load ToothGrowth data in ggpubr package as example
+data("ToothGrowth")
+head(ToothGrowth)
+
+#plotting
+ggpaired(ToothGrowth, x="supp", y="len",fill="supp",line.color = "gray",point.size = 2, 
+line.size = 0.6,palette = "npg")+ stat_compare_means(paired = TRUE)
+```
+
+
+
+```{r}
+library(ggstatsplot)
+ ggbetweenstats(ToothGrowth, x="supp", y="len")
+```
+
+
+```{r}
+library(ggplot2)
+library(ggbeeswarm)
+ggplot(data = mpg, 
+       aes(x = reorder(class, hwy, FUN = median),
+           y = hwy, alpha=1/10,color=class)) +
+geom_boxplot()+
+geom_violin()+
+geom_quasirandom(method="smiley") #method="tukey"/"tukeyDense"/"frowney""smiley"/
+
+```
+```{r}
+library(ggplot2)
+library(ggbeeswarm)
+ggplot(data = mpg, 
+       aes(x = reorder(class, hwy, FUN = median),
+           y = hwy,alpha=1/10,color=class))  +
+geom_boxplot()+
+geom_violin()+
+geom_beeswarm()
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(diamonds, aes(x = cut_number(price, 10), y = carat)) +
+  geom_boxplot() +
+  coord_flip() +
+  xlab("Price")
+```
+
+```{r}
+library(ggplot2)
+ggplot(diamonds, aes(x = cut_width(price, 2000, boundary = 0), y = carat)) +
+  geom_boxplot(varwidth = TRUE) +
+  coord_flip() +
+  xlab("Price")
+```
+
+```{r}
+ggplot(diamonds, aes(x = cut_number(carat, 5), y = price, colour = cut)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = mpg,
+       mapping = aes(x = forcats::fct_reorder(class, hwy), y = hwy)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(
+    title = "Compact Cars have > 10 Hwy MPG than Pickup Trucks",
+    subtitle = "Comparing the median highway mpg in each class",
+    caption = "Data from fueleconomy.gov",
+    x = "Car Class",
+    y = "Highway Miles per Gallon"
+  )
+  
+```
+
+
+```{r}
+ggplot(mpg, aes(displ, hwy, colour = class)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Fuel Efficiency Mostly Varies by Car Class",
+    subtitle = "Subcompact caries fuel efficiency varies by engine size",
+    caption = "Data from fueleconomy.gov",
+    y = "Highway Miles per Gallon",
+    x = "Engine Displacement"
+  )
+```
+```{r}
+label <- tribble(
+  ~displ, ~hwy, ~label, ~vjust, ~hjust,
+     Inf,  Inf,    "Top right", "top", "right",
+     Inf, -Inf,    "Bottom right", "bottom", "right",
+    -Inf,  Inf,    "Top left", "top", "left",
+    -Inf, -Inf,    "Bottom left", "bottom", "left"
+)
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  geom_text(aes(label = label, vjust = vjust, hjust = hjust), data = label)
+```
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  annotate("text", x = Inf, y = Inf,
+           label = "Increasing engine size is \nrelated to decreasing fuel economy.", vjust = "top", hjust = "right")
+```
+```{r}
+label <- tibble(
+  displ = Inf,
+  hwy = Inf,
+  label = "Increasing engine size is \nrelated to decreasing fuel economy."
+)
+
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  geom_text(aes(label = label), data = label, vjust = "top", hjust = "right",
+            size = 2) +
+  facet_wrap(.~class)
+```
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(aes(colour = class)) +
+  geom_smooth(se = FALSE) 
+```
+```{r}
+fouryears <- lubridate::make_date(seq(year(min(presidential$start)),
+                                      year(max(presidential$end)),
+                                      by = 4), 1, 1)
+
+presidential %>%
+  mutate(id = 33 + row_number(),
+         name_id = forcats::fct_inorder(stringr::str_c(name, " (", id, ")"))) %>%
+  ggplot(aes(start, name_id, colour = party)) +
+    geom_point() +
+    geom_segment(aes(xend = end, yend = name_id)) +
+    scale_colour_manual("Party", values = c(Republican = "red", Democratic = "blue")) +
+    scale_y_discrete(NULL) +
+    scale_x_date(NULL, breaks = presidential$start, date_labels = "'%y",
+                 minor_breaks = fouryears) +
+    ggtitle("Terms of US Presdients", 
+            subtitle = "Roosevelth (34th) to Obama (44th)") +
+    theme(panel.grid.minor = element_blank(),
+          axis.ticks.y = element_blank())
+```
+```{r}
+ggplot(diamonds, aes(carat, price)) +
+  geom_point(aes(colour = cut), alpha = 1/20)
+```
+

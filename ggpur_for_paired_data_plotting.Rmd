@@ -1,0 +1,34 @@
+---
+title: "Paird test of COAD_ Normal and Cancer"
+author: "yzhang"
+date: "2018年11月29日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+```{r}
+#plotting
+library(ggplot2)
+library(ggpubr)
+ggpaired(COAD_NC_paired, x="Group", y="COAD_NC_paired$`METTL7A|25840`",fill="Group",line.color = "gray",point.size = 2, 
+line.size = 0.6,palette = "npg")+ stat_compare_means(paired = TRUE)
+
+```
+```{r}
+data("diff_express")
+head(diff_express)
+ggmaplot(diff_express, main = expression("Group 1" %->% "Group 2"),
+   fdr = 0.05, fc = 2, size = 0.4,
+   palette = c("#B31B21", "#1465AC", "darkgray"),
+   genenames = as.vector(diff_express$name),
+   legend = "top", top = 20,
+   font.label = c("bold", 11), label.rectangle = TRUE,
+   font.legend = "bold",
+   font.main = "bold",
+   ggtheme = ggplot2::theme_minimal())
+```
+
+
