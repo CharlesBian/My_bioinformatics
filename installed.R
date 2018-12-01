@@ -114,6 +114,8 @@ install.packages("scatterplot3d")
 install.packages("Seurat")
 install.packages("cellrange")
 BiocManager::install("cellranger")
+install.packages("rgl")
+install.packages("magick")
 
 #neural networks
 install.packages("nnet")
