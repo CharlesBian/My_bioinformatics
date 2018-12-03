@@ -1,4 +1,5 @@
 library(DESeq2)
+library(openxlsx)
 library(readr)
 
 coadread_rawdata <- read.table(choose.files(),sep = '\t', header = TRUE)
@@ -49,10 +50,10 @@ all <- cbind(pair_normal_counts,pair_tumor_counts[-1])
 #write the files
 setwd(choose.dir())
 getwd()
-write.csv(pair_normal_counts,"pair_ESCA_normal_counts.csv")
-write.csv(pair_tumor_counts,"pair__ESCA_tumor_counts.csv")
-write.csv(all_normal_counts,"all__ESCA_normal_counts.csv")
-write.csv(all_tumor_counts,"all__ESCA_tumor_counts.csv")
+write.csv(pair_normal_counts,"pair_coadread_normal_rawcounts.csv")
+write.csv(pair_tumor_counts,"pair_coadread_tumor_rawcounts.csv")
+write.csv(all_normal_counts,"all_coadread_normal_rawcounts.csv")
+write.csv(all_tumor_counts,"all_coadread_tumor_rawcounts.csv")
 
 #pheatmap
 library(pheatmap)
@@ -67,11 +68,22 @@ pheatmap(all[1:20531,2:ncol(all)],
 #prcomp
 library(ggplot2)
 
+a<-read.csv(file.choose())
+b<-read.csv(file.choose())
+c<-read.csv(file.choose())
+d<-read.csv(file.choose())
+e<-read.csv(file.choose())
+f<-read.csv(file.choose())
+g<-read.csv(file.choose())
+h<-read.csv(file.choose())  
+all<-cbind(a,b[-1],c[-1],d[-1],e[-1],f[-1])
+all<-cbind(b, d[-1], f[-1])
+
 pair_normal_counts <- read.csv(file.choose())
 pair_tumor_counts <- read.csv(file.choose())
 all <- cbind(pair_normal_counts,pair_tumor_counts[-1])
 
-p4 <- prcomp(all[-1],scale. = T,rank. = 8,retx = T)
+p4 <-prcomp(all[-1],scale. = T,rank. = 8,retx = T)
 p4
 p4$x
 p4$rotation
@@ -93,18 +105,26 @@ lab_y <- paste("PC2","(",round((summary(p4))$importance[2,2]*100,1),"%)",sep="")
 lab_z <- paste("PC3","(",round((summary(p4))$importance[2,3]*100,1),"%)",sep="")
 
 group <- rownames(p4$rotation)
-group <- factor(c(rep("normal",50),
-                  rep("tumor",50)))
+group <- factor(c(rep("coadread normal",50),
+                  rep("coadread tumor",50),
+                  rep("ESCA normal",11),
+                  rep("ESCA tumor",11),
+                  rep("STAD normal",32),
+                  rep("STAD tumor",32)))
+group <- factor(c(rep("coadread tumor",50),
+                  rep("ESCA tumor",11),
+                  rep("STAD tumor",32)))
 
 ggplot(prc_plot,aes(p4$rotation[,1],p4$rotation[,2],colour=group))+
   geom_point(size=3)+
   # scale_colour_manual(values=c("blue","white","red","yellow","black","green"))+
-  scale_color_manual(values = rainbow(n=13))+
+  scale_color_manual(values = rainbow(n=6))+
   stat_ellipse(level = 0.92)+
   ylab(lab_y)+
   xlab(lab_x)+
-  labs(title="ESCA normal vs tumor")
+  labs(title="normal vs tumor")
 
+#plot 3D PCA
 library(rgl)
 library("RColorBrewer")
 
@@ -115,9 +135,24 @@ plot3d(p4$rotation[,1],
        xlab = lab_x,
        ylab = lab_y,
        zlab = lab_z,
-       col =c(rep("red",50),rep("orange",50)))
-movie3d(spin3d(axis = c(0,0,1),rpm=3),duration = 10, fps = 50,dir = "F:/project/bian_data/GDC/picture")
+       col =c(rep("red",50),
+              rep("green",11),
+              rep("blue",32)))
 
+plot3d(p4$rotation[,1],
+       p4$rotation[,2],
+       p4$rotation[,3],
+       xlab = lab_x,
+       ylab = lab_y,
+       zlab = lab_z,
+       col =c(rep("red",50),
+              rep("yellow",50),
+              rep("green",11),
+              rep("deepskyblue",11),
+              rep("blue",32),
+              rep("hotpink",32)))
+
+movie3d(spin3d(axis = c(0,0,1),rpm=3),duration = 10, fps = 50,dir = "F:/project/bian_data/GDC/picture")
 
 #use the cmd for magick
 system("F:/project/bian_data/GDC/deal/already/pair_data/3d/magick convert -delay 1 *.png ESCA.gif")
@@ -126,6 +161,209 @@ ellips <- ellipse3d(cov(cbind(p4$rotation[,1],p4$rotation[,2],p4$rotation[,3])),
                     centre = c(mean(p4$rotation[,1]),mean(p4$rotation[,2]),mean(p4$rotation[,3])),level=0.99)
 
 plot3d(ellips,col="blue",alpha=0.2,add=TRUE,box=FALSE)
+
+#DESeq2
+pair_normal_rawcounts<-read.csv(file.choose())
+pair_tumor_rawcounts<-read.csv(file.choose())
+geneID <-as.vector(pair_normal_rawcounts[,1])
+i=1
+genenames<-c()
+geneid <-c()
+for(i in 1:20531)
+{
+  genenames[i] <- strsplit(geneID[i],'[|]')[[1]][1]
+  geneid[i] <- strsplit(geneID[i],'[|]')[[1]][2]
+  i=i+1
+}
+
+rna_seq_data <- cbind(pair_normal_rawcounts,pair_tumor_rawcounts[-1])
+rna_seq_data <-cbind(rna_seq_data[-1],geneid)
+
+colnamber<-ncol(rna_seq_data)
+countdata<- as.matrix(floor(rna_seq_data[1:nrow(rna_seq_data),2:colnamber]))
+countdata <- subset(countdata,select=c(1,2,5,6))
+condition <- as.factor(c(rep("normal",50),rep("tumor",50)))
+col_data <-data.frame(row.names = colnames(countdata),
+                      group_list=condition)
+
+dds <- DESeqDataSetFromMatrix(countData = countdata,
+                              colData = col_data,
+                              design = ~group_list)
+
+rownames(dds)<-geneid
+dds2 <- DESeq(dds)
+
+#<50 samples
+rld <- rlogTransformation(dds2)
+exprSet = assay(rld)
+
+#>50 samples
+vsd<-vst(dds2) 
+exprSet = assay(vsd)
+
+boxplot(countdata)
+boxplot(exprSet)
+
+resultsNames(dds2)
+res <- results(dds2)
+res_ordered <- as.data.frame(res[order(res$padj),])
+res$log2FoldChange
+res$padj
+
+res_ordered$threshold <- as.factor(ifelse(res_ordered$pvalue<0.05&abs(res_ordered$log2FoldChange)>=2,
+                                          ifelse(res_ordered$log2FoldChange>2,"Up","Down"),"Not"))
+
+downname <- head(subset(res_ordered,threshold=="Down"),13)  #subset the important gene
+downname <- merge(downname,rna_seq_data,by.x=rownames(downname),by.y="geneid",all.x = TRUE)
+name <- subset(rna_seq_data,gene_id==rownames(downname))
+
+sum(is.na(rna_seq_data$symbol))
+upname <- head(subset(res_ordered,threshold=="Up"),13)  #subset the important gene
+upname <- merge(upname,rna_seq_data,by.x=Row.names,by.y="geneid",all.x = TRUE)
+
+dename <- subset(res_ordered,pvalue<0.05&threshold!="Not")
+write.xlsx(rownames(dename),"DEname")
+
+ggplot(res_ordered,
+       aes(x=res_ordered$log2FoldChange,
+           y=-log10(res_ordered$padj),
+           colour = threshold))+
+  scale_color_manual(values=c("skyblue","grey","red"))+
+  geom_point(size = 2.5)+
+  xlim(c(-4,4))+
+  ylab("-log10 p-value")+
+  xlab("log2 fold change")+
+  labs(title="Volcano of TCGA_coadread")+
+  geom_vline(xintercept = c(-2,2),lty=4,col="black",lwd=0.6)+
+  geom_hline(yintercept = -log10(0.05),lty=4,col="black",lwd=0.6)+
+  theme(legend.position = "right",
+        panel.grid = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(face = "bold",color = "black",size = 12),
+        plot.title = element_text(hjust = 0.5))
+
+
+  annotate(geom ="text",
+           x=downname$log2FoldChange,
+           y=-log10(downname$pvalue),
+           label=rownames(downname),
+           size = 2.3)+
+  annotate(geom ="text",
+           x=upname$log2FoldChange,
+           y=-log10(upname$pvalue),
+           label=rownames(upname),
+           size = 2.3)
+
+
+  
+#GO and KEGG
+library("DOSE")
+library("clusterProfiler")
+
+up_gene<-subset(dename,threshold=="Up")
+down_gene<-subset(dename,threshold=="Down")
+
+gene <-dename
+
+ego <- enrichGO(gene = rownames(gene),
+                 OrgDb = "org.Hs.eg.db",
+                 ont = "CC",
+                 pvalueCutoff = 0.05,
+                 readable = TRUE)
+summary(as.data.frame(ego))
+
+head(ego,n = 12L)
+barplot(ego, drop = TRUE, showCategory = 30)
+dotplot(ego,
+        showCategory = 40,
+        color = "qvalue",
+        title="Gene ontology of TCGA_coadread")
+  
+cnetplot(ego)
+emapplot(ego)
+plotGOgraph(ego)
+
+#KEGG analysis
+ekk <- enrichKEGG(gene =rownames(gene),
+                  organism = "hsa",
+                  pvalueCutoff = 0.05,
+                  pAdjustMethod = "BH",
+                  use_internal_data = TRUE)
+  
+summary(as.data.frame(ekk))
+  
+write.csv(summary(ekk),"KEGG1-enrich-down.csv",row.names = FALSE)
+  
+head(ekk,n = 12L)
+  
+barplot(ekk, drop = TRUE, showCategory = 40,color = "qvalue")
+  
+dotplot(ekk,
+        showCategory = 40,
+        color = "qvalue",
+        title = "kegg pathway of TCGA_coadread_upregulate")
+  
+cnetplot(ekk)
+emapplot(ekk)
+
+#GSEA
+genelist<-subset(dename,select=log2FoldChange)
+genelist <-cbind(geneID=rownames(genelist),genelist)
+write.xlsx(genelist,"coadread_DEgene.xlsx")
+c5 <-read.gmt(choose.files())
+
+gl <- genelist[,2]
+names(gl) <- as.character((genelist[,1]))
+glist <- sort(gl,decreasing = TRUE)
+
+
+gs<-GSEA(glist,
+         TERM2GENE = c5,
+         verbose = FALSE,
+         pvalueCutoff = 0.1)
+
+gseaplot(gs,geneSetID = 1,title = "GSEA of TCGA_coadread")
+
+gsea.go <- gseGO(glist,
+                 OrgDb= org.Hs.eg.db,
+                 pvalueCutoff = 0.5)
+summary(as.data.frame(gsea.go))
+head(gsea.go)
+#gseaplot(gsea.go,geneSetID = 1,title = "GSEA.GO of TCGA_coadread")
+dotplot(gsea.go,
+        showCategory = 40,
+        title = "GSEA.GO of TCGA_coadread_upregulate")
+
+
+gsea.kegg <- gseKEGG(glist,
+                     organism = "hsa",
+                     pvalueCutoff = 0.5)
+head(gsea.kegg,40)
+dotplot(gsea.kegg,
+        showCategory = 50,
+        title = "GSEA.KEGG of TCGA_coadread")
+
+
+#pathway view
+require("pathview")
+pathview(gene.data = glist,
+         pathway.id = 'hsa04310',
+         species = "hsa",
+         limit = list(gene = max(abs(glist)),cpd=1))
+
+  
+pathview(gene.data = glist,
+         pathway.id = 'hsa04390',
+         species = "hsa",
+         limit = list(gene = max(abs(glist)),cpd=1),
+         kegg.native = FALSE,
+         expand.node = FALSE,
+         split.group = TRUE,
+         map.null = TRUE,
+         sign.pos = "bottomleft")
+
+
+
 
 
 
