@@ -68,6 +68,8 @@ pheatmap(all[1:20531,2:ncol(all)],
 #prcomp
 library(ggplot2)
 
+setwd(choose.dir())
+getwd()
 a<-read.csv(file.choose())
 b<-read.csv(file.choose())
 c<-read.csv(file.choose())
@@ -260,6 +262,7 @@ ggplot(res_ordered,
 library("DOSE")
 library("clusterProfiler")
 
+dename <- read.xlsx(choose.files())
 up_gene<-subset(dename,threshold=="Up")
 down_gene<-subset(dename,threshold=="Down")
 
@@ -310,38 +313,54 @@ emapplot(ekk)
 genelist<-subset(dename,select=log2FoldChange)
 genelist <-cbind(geneID=rownames(genelist),genelist)
 write.xlsx(genelist,"coadread_DEgene.xlsx")
+genelist <- read.xlsx(choose.files())
 c5 <-read.gmt(choose.files())
 
 gl <- genelist[,2]
 names(gl) <- as.character((genelist[,1]))
 glist <- sort(gl,decreasing = TRUE)
 
-
+#gsea analysis
 gs<-GSEA(glist,
          TERM2GENE = c5,
          verbose = FALSE,
          pvalueCutoff = 0.1)
+head(gs)
+dotplot(gs)
 
-gseaplot(gs,geneSetID = 1,title = "GSEA of TCGA_coadread")
+gseaplot(gs,
+         gs[1]$ID,
+         title = paste("GO difference:",gs[1]$Description))
 
+#gsea GO analysis
 gsea.go <- gseGO(glist,
                  OrgDb= org.Hs.eg.db,
                  pvalueCutoff = 0.5)
 summary(as.data.frame(gsea.go))
 head(gsea.go)
-#gseaplot(gsea.go,geneSetID = 1,title = "GSEA.GO of TCGA_coadread")
+
 dotplot(gsea.go,
         showCategory = 40,
         title = "GSEA.GO of TCGA_coadread_upregulate")
+gseaplot(gsea.go,
+         "GO:0016070",
+         title = paste("Gene ontology:",gsea.go[3]$Description))
 
 
+#gsea KEGG pathways
 gsea.kegg <- gseKEGG(glist,
                      organism = "hsa",
                      pvalueCutoff = 0.5)
+summary(as.data.frame(gsea.kegg))
 head(gsea.kegg,40)
+
 dotplot(gsea.kegg,
         showCategory = 50,
         title = "GSEA.KEGG of TCGA_coadread")
+
+gseaplot(gsea.kegg,
+         "hsa01100",
+         title = paste("KEGG pathways:",gsea.kegg[19]$Description))
 
 
 #pathway view
@@ -361,7 +380,6 @@ pathview(gene.data = glist,
          split.group = TRUE,
          map.null = TRUE,
          sign.pos = "bottomleft")
-
 
 
 
