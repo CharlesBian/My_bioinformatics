@@ -23,6 +23,9 @@ BiocManager::install("humanid")
 BiocManager::install("RSQLite")
 BiocManager::install("GEOquery")
 BiocManager::install("annaffy")
+BiocManager::install("affy")
+
+
 
 library("GSEABase")
 library("GOstats")
