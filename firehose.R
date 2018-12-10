@@ -1,6 +1,8 @@
 library(DESeq2)
 library(openxlsx)
 library(readr)
+library(ggplot2)
+
 
 coadread_rawdata <- read.table(choose.files(),sep = '\t', header = TRUE)
 ESCA_rawdata <- read.table(choose.files(),sep = '\t', header = TRUE)
@@ -66,7 +68,6 @@ pheatmap(all[1:20531,2:ncol(all)],
 
 
 #prcomp
-library(ggplot2)
 
 setwd(choose.dir())
 getwd()
@@ -165,6 +166,10 @@ ellips <- ellipse3d(cov(cbind(p4$rotation[,1],p4$rotation[,2],p4$rotation[,3])),
 plot3d(ellips,col="blue",alpha=0.2,add=TRUE,box=FALSE)
 
 #DESeq2
+library(vioplot)
+setwd(choose.dir())
+getwd()
+
 pair_normal_rawcounts<-read.csv(file.choose())
 pair_tumor_rawcounts<-read.csv(file.choose())
 geneID <-as.vector(pair_normal_rawcounts[,1])
@@ -181,10 +186,10 @@ for(i in 1:20531)
 rna_seq_data <- cbind(pair_normal_rawcounts,pair_tumor_rawcounts[-1])
 rna_seq_data <-cbind(rna_seq_data[-1],geneid)
 
-colnamber<-ncol(rna_seq_data)
-countdata<- as.matrix(floor(rna_seq_data[1:nrow(rna_seq_data),2:colnamber]))
+colnamber<-ncol(rna_seq_data)-1
+countdata<- as.matrix(floor(rna_seq_data[1:nrow(rna_seq_data),1:colnamber]))
 countdata <- subset(countdata,select=c(1,2,5,6))
-condition <- as.factor(c(rep("normal",50),rep("tumor",50)))
+condition <- as.factor(c(rep("normal",32),rep("tumor",32)))
 col_data <-data.frame(row.names = colnames(countdata),
                       group_list=condition)
 
@@ -224,7 +229,7 @@ upname <- head(subset(res_ordered,threshold=="Up"),13)  #subset the important ge
 upname <- merge(upname,rna_seq_data,by.x=Row.names,by.y="geneid",all.x = TRUE)
 
 dename <- subset(res_ordered,pvalue<0.05&threshold!="Not")
-write.xlsx(rownames(dename),"DEname")
+write.xlsx(dename,"STAD_DEgene.xlsx")
 
 ggplot(res_ordered,
        aes(x=res_ordered$log2FoldChange,
@@ -270,7 +275,7 @@ gene <-dename
 
 ego <- enrichGO(gene = rownames(gene),
                  OrgDb = "org.Hs.eg.db",
-                 ont = "CC",
+                 ont = "ALL",
                  pvalueCutoff = 0.05,
                  readable = TRUE)
 summary(as.data.frame(ego))
@@ -312,7 +317,7 @@ emapplot(ekk)
 #GSEA
 genelist<-subset(dename,select=log2FoldChange)
 genelist <-cbind(geneID=rownames(genelist),genelist)
-write.xlsx(genelist,"coadread_DEgene.xlsx")
+#write.xlsx(genelist,"coadread_DEgene.xlsx")
 genelist <- read.xlsx(choose.files())
 c5 <-read.gmt(choose.files())
 
@@ -343,8 +348,8 @@ dotplot(gsea.go,
         showCategory = 40,
         title = "GSEA.GO of TCGA_coadread_upregulate")
 gseaplot(gsea.go,
-         "GO:0016070",
-         title = paste("Gene ontology:",gsea.go[3]$Description))
+         gsea.go[1]$ID,
+         title = paste("Gene ontology:",gsea.go[1]$Description))
 
 
 #gsea KEGG pathways
@@ -359,8 +364,8 @@ dotplot(gsea.kegg,
         title = "GSEA.KEGG of TCGA_coadread")
 
 gseaplot(gsea.kegg,
-         "hsa01100",
-         title = paste("KEGG pathways:",gsea.kegg[19]$Description))
+         gsea.kegg[1]$ID,
+         title = paste("KEGG pathways:",gsea.kegg[1]$Description))
 
 
 #pathway view
@@ -380,10 +385,5 @@ pathview(gene.data = glist,
          split.group = TRUE,
          map.null = TRUE,
          sign.pos = "bottomleft")
-
-
-
-
-
 
 
