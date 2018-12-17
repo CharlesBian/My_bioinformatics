@@ -2,7 +2,7 @@ library(DESeq2)
 library(openxlsx)
 library(readr)
 library(ggplot2)
-
+library(dplyr)
 
 coadread_rawdata <- read.table(choose.files(),sep = '\t', header = TRUE)
 ESCA_rawdata <- read.table(choose.files(),sep = '\t', header = TRUE)
@@ -29,7 +29,7 @@ all_tumor_counts <- cbind(geneID,all_tumor_counts)
 
 #find the pair sample
 a <- colnames(all_normal_counts)[-1]
-a <- sort(substr(a,9,12))
+a <- substr(a,9,12)
 b <- subset(all_tumor_counts,
             select = sort(grep(paste(a, collapse = "|"), 
                           colnames(all_tumor_counts),
@@ -39,7 +39,7 @@ pair_tumor_counts <- cbind(geneID, b)
 
 
 c <- colnames(pair_tumor_counts)[-1]
-c <- sort(substr(c,9,12))
+c <- substr(c,9,12)
 d <- subset(all_normal_counts,
             select = grep(paste(c, collapse = "|"),
                           colnames(all_normal_counts),
