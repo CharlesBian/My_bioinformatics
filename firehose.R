@@ -52,7 +52,9 @@ all <- cbind(pair_normal_counts,pair_tumor_counts[-1])
 #write the files
 setwd(choose.dir())
 getwd()
-write.csv(pair_normal_counts,"pair_coadread_normal_rawcounts.csv")
+
+
+write.csv(pair_normal_counts,paste("pair_coadread_normal_rawcounts.csv"))
 write.csv(pair_tumor_counts,"pair_coadread_tumor_rawcounts.csv")
 write.csv(all_normal_counts,"all_coadread_normal_rawcounts.csv")
 write.csv(all_tumor_counts,"all_coadread_tumor_rawcounts.csv")
