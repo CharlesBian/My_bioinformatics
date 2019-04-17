@@ -24,7 +24,7 @@ BiocManager::install("RSQLite")
 BiocManager::install("GEOquery")
 BiocManager::install("annaffy")
 BiocManager::install("affy")
-
+BiocManager::install("WGCNA")
 
 
 library("GSEABase")
