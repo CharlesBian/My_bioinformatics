@@ -25,7 +25,8 @@ BiocManager::install("GEOquery")
 BiocManager::install("annaffy")
 BiocManager::install("affy")
 BiocManager::install("WGCNA")
-
+BiocManager::install("tidyverse")
+BiocManager::install("ggstatsplot")
 
 library("GSEABase")
 library("GOstats")
