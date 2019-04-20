@@ -31,8 +31,8 @@ b <- as.data.frame(RNAi)
 
 
 #input a gene name or a GENEID
-gene = "NAT10"
-another_gene <- "ALKBH5"
+gene = "CBS"
+another_gene <- "MPST"
 
 #3.substract the gene expression
 expr1 <- as.numeric(a[gene,])
@@ -51,7 +51,8 @@ p+geom_density(aes(expr1),fill="lightblue",show.legend = TRUE,linetype = "blank"
  # legend()+
   theme(axis.text.y = element_blank(),
         axis.line = element_blank(),
-        axis.ticks = element_blank())
+        axis.ticks = element_blank())+
+  geom_rug()
 
 #5.correlation anaysis
 
@@ -116,6 +117,10 @@ ggplot(data = NULL,
   geom_smooth(method="lm",se=TRUE)+
   theme_bw()+ 
   scale_color_aaas()
+
+
+
+
 
 
 
