@@ -1,5 +1,3 @@
-setwd("G:/charles-code/code_project/Depmap")
-getwd()
 library(tidyr)
 library(readr)
 library(tidyverse)
@@ -13,6 +11,7 @@ library(ggplot2)
 library(dplyr)
 library(psych)
 library(tidyr)
+library(data.table)
 
 #create the file_t(optional)
 file <- read.csv("gene_effect_corrected.csv",header = TRUE,check.names = FALSE)
@@ -31,10 +30,11 @@ b <- as.data.frame(RNAi)
 
 
 #input a gene name or a GENEID
-gene = "CBS"
-another_gene <- "MPST"
+gene = ""
+another_gene <- "BCLAF1"
 
 #3.substract the gene expression
+fread("gene_effect_corrected_2.csv")
 expr1 <- as.numeric(a[gene,])
 expr2 <- as.numeric(b[gene,])
 
@@ -51,8 +51,7 @@ p+geom_density(aes(expr1),fill="lightblue",show.legend = TRUE,linetype = "blank"
  # legend()+
   theme(axis.text.y = element_blank(),
         axis.line = element_blank(),
-        axis.ticks = element_blank())+
-  geom_rug()
+        axis.ticks = element_blank())
 
 #5.correlation anaysis
 
@@ -85,22 +84,19 @@ names(cor_data_df) <- c("SYMBOL","correlation","pvalue")
 cor_data_posi <- cor_data_df %>% 
   
   filter(pvalue < 0.05) %>% 
-  
+  filter(correlation > 0.15) %>%
   arrange(desc(correlation))%>% 
-  
   dplyr::slice(1:1000)
 
 View(cor_data_posi)
 
-
 cor_data_neg <- cor_data_df %>% 
-  
   filter(pvalue < 0.05) %>% 
-  
+  filter(correlation < -0.15) %>%
   arrange(correlation)%>% 
-  
   dplyr::slice(1:1000)
 
+View(cor_data_neg)
 #7.plot the correlation photo
 
 another_expr <- as.numeric(a[another_gene,])
@@ -119,6 +115,7 @@ ggplot(data = NULL,
   scale_color_aaas()
 
 
+write.csv(cor_data_posi,paste(gene,"correlation.csv"))
 
 
 
