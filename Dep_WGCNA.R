@@ -111,7 +111,45 @@ TOMplot(plotDiss,
         selectColors,
         main = "Network heatmap plot, selected genes")
 
+MEList = moduleEigengenes(t(a),colors = dynamicColors)
+MEs = MEList$eigengenes
 
+#计算根据模块特征向量基因计算模块相异度
+MEDiss = 1- cor(MEs)
+#Cluster module eigengenes
+METree = hclust(as.dist(MEDiss),method = "average")
+
+#Plot the result
+plotEigengeneNetworks(MEs,
+                      "Eigengene adjacency heatmap",
+                      marHeatmap = c(3,4,2,2),
+                      plotDendrograms = FALSE,
+                      xLabelsAngle = 90)
+ta <- t(a)
+#画出指定模块表达量的热图
+
+which.module = unique(dynamicColors)
+which.module
+
+ME = mergeMEs[,paste("ME",which.module,sep = "")]
+
+par(mfrow = c(2,1),mar = c(0,4.1,4,2.05))
+
+plotMat(t(scale(ta[,colorh1 == which.module])),
+        nrgcols = 30,
+        rlabels = F,
+        rcols = which.module,
+        main = which.module,
+        cex.main =2)
+
+par(mar = c(2,2.3,0.5,0.8))
+
+barplot(ME,
+        col = which.module,
+        main = "",
+        cex.main = 2,
+        ylab = "Eigengene expression",
+        xlab = "array sample")
 
 
 
